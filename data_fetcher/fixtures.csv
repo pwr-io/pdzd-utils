@@ -1,2 +1,2 @@
 fixture_id,referee,timezone,date,timestamp,league_id,league_name,venue_city,home_team_id,home_team_name,home_team_goals_halftime,home_team_goals_fulltime,away_team_id,away_team_name,away_team_goals_halftime,away_team_goals_fulltime
-587391,H. Osmers,UTC,2021-03-07T17:00:00+00:00,1615136400,78,Bundesliga 1,Bielefeld,188,Arminia Bielefeld,0,0,182,Union Berlin,0,0
+587355,"Markus Schmidt, Germany",UTC,2021-03-10T17:30:00+00:00,1615397400,78,Bundesliga 1,Bielefeld,188,Arminia Bielefeld,0,,162,Werder Bremen,0,

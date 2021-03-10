@@ -1,5 +1,6 @@
 const axios = require('axios')
 const csvWriter = require('csv-writer')
+const fs = require('fs')
 
 const BASE_URL = 'https://v3.football.api-sports.io'
 const API_KEY = 'e7b688ca50e00ec74d5c22ec9e6aca79'
@@ -177,10 +178,8 @@ const mappers = {
     },
     formations: data => {
         const { parameters, response } = data
-        console.log(data)
         const [first_team, second_team] = response
-        console.log(first_team, second_team)
-        return {
+        return [{
             fixture_id: parameters.fixture,
             home_team_id: first_team.team.id,
             home_team_name: first_team.team.name,
@@ -188,7 +187,7 @@ const mappers = {
             away_team_id: second_team.team.id,
             away_team_name: second_team.team.name,
             away_team_formation: second_team.formation,
-        }
+        }]
     }
 }
 
@@ -200,13 +199,13 @@ const leagues = [
 ]
 
 const season = 2020
-const fixtures_to_fetch = 1
+const fixtures_to_fetch = 10
 
 const main = () => {
     leagues.forEach(async league => {
         const { id, name } = league
         console.log(`Fetching last ${fixtures_to_fetch} from ${name}`)
-    
+
         console.log('Fetching fixtures')
         const fixtureResponse = await request('/fixtures', {
             params: {
@@ -216,42 +215,34 @@ const main = () => {
             }
         })
         const fixtureMapped = mappers.fixtures(fixtureResponse)
-        writers.fixtures.writeRecords(fixtureMapped)
-    
-        fixtureMapped.forEach(async ({ fixture_id }) => {
-            console.log(`Fetching player_stats for fixture ${fixture_id}`)
-            const playerStatsResponse = await request('/fixtures/players', {
-                params: {
-                    fixture: fixture_id
-                }
-            })
-            const playerStatsMapped = mappers.player_stats(playerStatsResponse)
-            writers.player_stats.writeRecords(playerStatsMapped)
-    
-            console.log(`Fetching formations for fixture ${fixture_id}`)
-            const formationsResponse = await request('/fixtures/lineups', {
-                params: {
-                    fixture: fixture_id
-                }
-            })
-            const formationsMapped = mappers.formations(formationsResponse)
-            writers.formations.writeRecords(formationsMapped)
+        await writers.fixtures.writeRecords(fixtureMapped)
+
+        fixtureMapped.forEach(({ fixture_id }) => {
+            setTimeout(
+                async () => {
+                    console.log(`Fetching player_stats for fixture ${fixture_id}`)
+                    const playerStatsResponse = await request('/fixtures/players', {
+                        params: {
+                            fixture: fixture_id
+                        }
+                    })
+                    const playerStatsMapped = mappers.player_stats(playerStatsResponse)
+                    writers.player_stats.writeRecords(playerStatsMapped)
+
+                    console.log(`Fetching formations for fixture ${fixture_id}`)
+                    const formationsResponse = await request('/fixtures/lineups', {
+                        params: {
+                            fixture: fixture_id
+                        }
+                    })
+                    const formationsMapped = mappers.formations(formationsResponse)
+                    writers.formations.writeRecords(formationsMapped)
+                },
+                12000
+            )
         })
-    
+
     })
 }
 
-const formationsWriterTest = () => {
-    const formationMapped = {
-        fixture_id: '587391',
-        home_team_id: 188,
-        home_team_name: 'Arminia Bielefeld',
-        home_team_formation: '4-2-3-1',
-        away_team_id: 182,
-        away_team_name: 'Union Berlin',
-        away_team_formation: '4-4-2'
-      }
-    writers.formations.writeRecords(formationMapped)
-}
-
-formationsWriterTest()
+main()
