@@ -199,7 +199,7 @@ const leagues = [
 ]
 
 const season = 2020
-const fixtures_to_fetch = 10
+const fixtures_to_fetch = 5
 
 const main = () => {
     leagues.forEach(async league => {
@@ -217,7 +217,7 @@ const main = () => {
         const fixtureMapped = mappers.fixtures(fixtureResponse)
         await writers.fixtures.writeRecords(fixtureMapped)
 
-        fixtureMapped.forEach(({ fixture_id }) => {
+        fixtureMapped.forEach(({ fixture_id }, index) => {
             setTimeout(
                 async () => {
                     console.log(`Fetching player_stats for fixture ${fixture_id}`)
@@ -238,7 +238,7 @@ const main = () => {
                     const formationsMapped = mappers.formations(formationsResponse)
                     writers.formations.writeRecords(formationsMapped)
                 },
-                12000
+                12000 * (index + 1)
             )
         })
 

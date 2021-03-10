@@ -1,2 +1,6 @@
 fixture_id,referee,timezone,date,timestamp,league_id,league_name,venue_city,home_team_id,home_team_name,home_team_goals_halftime,home_team_goals_fulltime,away_team_id,away_team_name,away_team_goals_halftime,away_team_goals_fulltime
 587355,"Markus Schmidt, Germany",UTC,2021-03-10T17:30:00+00:00,1615397400,78,Bundesliga 1,Bielefeld,188,Arminia Bielefeld,0,,162,Werder Bremen,0,
+587391,H. Osmers,UTC,2021-03-07T17:00:00+00:00,1615136400,78,Bundesliga 1,Bielefeld,188,Arminia Bielefeld,0,0,182,Union Berlin,0,0
+587390,M. Jöllenbeck,UTC,2021-03-07T14:30:00+00:00,1615127400,78,Bundesliga 1,Köln,192,FC Koln,0,1,162,Werder Bremen,0,1
+587383,M. Fritz,UTC,2021-03-06T17:30:00+00:00,1615051800,78,Bundesliga 1,München,157,Bayern Munich,2,4,165,Borussia Dortmund,2,2
+587386,G. Winkmann,UTC,2021-03-06T14:30:00+00:00,1615041000,78,Bundesliga 1,Freiburg im Breisgau,160,SC Freiburg,0,0,173,RB Leipzig,1,3
