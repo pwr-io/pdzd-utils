@@ -28,7 +28,7 @@ const writers = {
     fixtures: csvWriter.createObjectCsvWriter({
         path: 'fixtures.csv',
         header: [
-            { id: "id", title: "id" },
+            { id: "fixture_id", title: "fixture_id" },
             { id: "referee", title: "referee" },
             { id: "timezone", title: "timezone" },
             { id: "date", title: "date" },
@@ -55,6 +55,7 @@ const writers = {
             { id: "player_id", title: "player_id" },
             { id: "player_name", title: "player_name" },
             { id: "minutes", title: "minutes" },
+            { id: "number", title: "number" },
             { id: "position", title: "position" },
             { id: "rating", title: "rating" },
             { id: "captain", title: "captain" },
@@ -87,6 +88,18 @@ const writers = {
             { id: "penalty_missed", title: "penalty_missed" },
             { id: "penalty_saved", title: "penalty_saved" },
         ]
+    }),
+    formations: csvWriter.createObjectCsvWriter({
+        path: 'formations.csv',
+        header: [
+            { id: "fixture_id", title: "fixture_id" },
+            { id: "home_team_id", title: "home_team_id" },
+            { id: "home_team_name", title: "home_team_name" },
+            { id: "home_team_formation", title: "home_team_formation" },
+            { id: "away_team_id", title: "away_team_id" },
+            { id: "away_team_name", title: "away_team_name" },
+            { id: "away_team_formation", title: "away_team_formation" },
+        ]
     })
 }
 
@@ -94,7 +107,7 @@ const mappers = {
     fixtures: data => data.response.map(entry => {
         const { fixture, league, teams, score } = entry
         return {
-            id: fixture.id,
+            fixture_id: fixture.id,
             referee: fixture.referee,
             timezone: fixture.timezone,
             date: fixture.date,
@@ -126,6 +139,7 @@ const mappers = {
                     player_id: player.id,
                     player_name: player.name,
                     minutes: statistic.games.minutes,
+                    number: statistic.games.number,
                     position: statistic.games.position,
                     rating: statistic.games.rating,
                     captain: statistic.games.captain,
@@ -160,34 +174,84 @@ const mappers = {
                 }
             })
         })
+    },
+    formations: data => {
+        const { parameters, response } = data
+        console.log(data)
+        const [first_team, second_team] = response
+        console.log(first_team, second_team)
+        return {
+            fixture_id: parameters.fixture,
+            home_team_id: first_team.team.id,
+            home_team_name: first_team.team.name,
+            home_team_formation: first_team.formation,
+            away_team_id: second_team.team.id,
+            away_team_name: second_team.team.name,
+            away_team_formation: second_team.formation,
+        }
     }
 }
 
-const teams = [
-    "Napoli"
+const leagues = [
+    {
+        id: 78,
+        name: 'Bundesliga 1'
+    }
 ]
 
-// request(`/teams`, {
-//     params: {
-//         search: "napoli"
-//     }
-// })
-//     .then(data => data.response[0].team)
-//     .then(team => writers.teams.writeRecords([team]))
+const season = 2020
+const fixtures_to_fetch = 1
 
-// request('/fixtures', {
-//     params: {
-//         team: 492,
-//         last: 30
-//     }
-// })
-//     .then(mappers.fixtures)
-//     .then(data => writers.fixtures.writeRecords(data))
+const main = () => {
+    leagues.forEach(async league => {
+        const { id, name } = league
+        console.log(`Fetching last ${fixtures_to_fetch} from ${name}`)
+    
+        console.log('Fetching fixtures')
+        const fixtureResponse = await request('/fixtures', {
+            params: {
+                league: id,
+                season: season,
+                last: fixtures_to_fetch
+            }
+        })
+        const fixtureMapped = mappers.fixtures(fixtureResponse)
+        writers.fixtures.writeRecords(fixtureMapped)
+    
+        fixtureMapped.forEach(async ({ fixture_id }) => {
+            console.log(`Fetching player_stats for fixture ${fixture_id}`)
+            const playerStatsResponse = await request('/fixtures/players', {
+                params: {
+                    fixture: fixture_id
+                }
+            })
+            const playerStatsMapped = mappers.player_stats(playerStatsResponse)
+            writers.player_stats.writeRecords(playerStatsMapped)
+    
+            console.log(`Fetching formations for fixture ${fixture_id}`)
+            const formationsResponse = await request('/fixtures/lineups', {
+                params: {
+                    fixture: fixture_id
+                }
+            })
+            const formationsMapped = mappers.formations(formationsResponse)
+            writers.formations.writeRecords(formationsMapped)
+        })
+    
+    })
+}
 
-request('/fixtures/players', {
-    params: {
-        fixture: 608787
-    }
-})
-.then(mappers.player_stats)
-.then(data => writers.player_stats.writeRecords(data))
+const formationsWriterTest = () => {
+    const formationMapped = {
+        fixture_id: '587391',
+        home_team_id: 188,
+        home_team_name: 'Arminia Bielefeld',
+        home_team_formation: '4-2-3-1',
+        away_team_id: 182,
+        away_team_name: 'Union Berlin',
+        away_team_formation: '4-4-2'
+      }
+    writers.formations.writeRecords(formationMapped)
+}
+
+formationsWriterTest()
