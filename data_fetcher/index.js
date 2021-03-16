@@ -101,6 +101,22 @@ const writers = {
             { id: "away_team_name", title: "away_team_name" },
             { id: "away_team_formation", title: "away_team_formation" },
         ]
+    }),
+    events: csvWriter.createObjectCsvWriter({
+        path: 'events.csv',
+        header: [
+            { id: "fixture_id", title: "fixture_id" },
+            { id: "minute", title: "minute" },
+            { id: "team_id", title: "team_id" },
+            { id: "team_name", title: "team_name" },
+            { id: "player_id", title: "player_id" },
+            { id: "player_name", title: "player_name" },
+            { id: "assist_player_id", title: "assist_player_id" },
+            { id: "assist_player_name", title: "assist_player_name" },
+            { id: "event_type", title: "event_type" },
+            { id: "event_detail", title: "event_detail" },
+            { id: "comments", title: "comments" },
+        ]
     })
 }
 
@@ -188,6 +204,22 @@ const mappers = {
             away_team_name: second_team.team.name,
             away_team_formation: second_team.formation,
         }]
+    },
+    events: data => {
+        const { parameters, response } = data
+        return response.map(event => ({
+            fixture_id: parameters.fixture,
+            minute: event.time.elapsed,
+            team_id: event.team.id,
+            team_name: event.team.name,
+            player_id: event.player.id,
+            player_name: event.player.name,
+            assist_player_id: event.assist.id,
+            assist_player_name: event.assist.name,
+            event_type: event.type,
+            event_detail: event.detail,
+            comments: event.comments,
+        }))
     }
 }
 
@@ -199,7 +231,7 @@ const leagues = [
 ]
 
 const season = 2020
-const fixtures_to_fetch = 5
+const fixtures_to_fetch = 1
 
 const main = () => {
     leagues.forEach(async league => {
@@ -229,14 +261,14 @@ const main = () => {
                     const playerStatsMapped = mappers.player_stats(playerStatsResponse)
                     writers.player_stats.writeRecords(playerStatsMapped)
 
-                    console.log(`Fetching formations for fixture ${fixture_id}`)
-                    const formationsResponse = await request('/fixtures/lineups', {
+                    console.log(`Fetching events for fixture ${fixture_id}`)
+                    const formationsResponse = await request('/fixtures/events', {
                         params: {
                             fixture: fixture_id
                         }
                     })
-                    const formationsMapped = mappers.formations(formationsResponse)
-                    writers.formations.writeRecords(formationsMapped)
+                    const formationsMapped = mappers.events(formationsResponse)
+                    writers.events.writeRecords(formationsMapped)
                 },
                 12000 * (index + 1)
             )
